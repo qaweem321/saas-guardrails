@@ -1,0 +1,10 @@
+{
+  "name": "saas-guardrails",
+  "description": "Production guardrails for web apps with logins and billing: an audit command plus skills Claude uses on its own while you build.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Qaweem Ahmad"
+  },
+  "license": "MIT",
+  "keywords": ["saas", "nextjs", "security", "billing", "stripe", "postgres", "code-review"]
+}

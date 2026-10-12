@@ -1,0 +1,14 @@
+{
+  "name": "saas-guardrails",
+  "description": "Skills that stop Claude Code from shipping the bugs real SaaS apps ship: billing wording, race conditions, SSRF, auth redirects and file deletion.",
+  "owner": {
+    "name": "Qaweem Ahmad"
+  },
+  "plugins": [
+    {
+      "name": "saas-guardrails",
+      "source": "./plugins/saas-guardrails",
+      "description": "Production guardrails for web apps with logins and billing: an audit command plus skills Claude uses on its own while you build."
+    }
+  ]
+}
