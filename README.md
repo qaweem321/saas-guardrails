@@ -69,7 +69,7 @@ runs before the cancel check, so the customer cancels and the page still reads a
 And `Renews on ...` shows right next to `Your last payment failed`.
 
 **4. A fixed idempotency key returns yesterday's cancelled payment.**
-`idempotencyKey: \`deposit-${id}\`` makes a retried pickup get back the hold that was just
+`` idempotencyKey: `deposit-${id}` `` makes a retried pickup get back the hold that was just
 cancelled. Staff think the deposit is on the card, but it isn't.
 
 **5. A file ID from a form deletes someone else's evidence.** The customer submits the ID of an
@@ -80,7 +80,7 @@ the damage evidence, gets deleted.
 
 - `npm run check` validates the marketplace and plugin format and runs 23 tests.
 - The tests **load the code examples straight out of the SKILL.md files**, so the docs can't
-  drift from what's tested: the SSRF check against 15 bypass forms, `safeNextPath` against
+  drift from what's tested: the SSRF check against 15 private-address forms (IPv6-mapped, NAT64, short and decimal IPv4), `safeNextPath` against
   open-redirect tricks, billing wording for every status, and the owner-lock SQL on a real Postgres
   (PGlite).
 - The owner-lock SQL was also run with **two live connections racing** on a hosted Postgres (Neon):
