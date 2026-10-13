@@ -78,7 +78,7 @@ the damage evidence, gets deleted.
 
 ## How this was tested
 
-- `npm run check` validates the marketplace and plugin format and runs 23 tests.
+- `npm run check` validates the marketplace and plugin format and runs the tests.
 - The tests **load the code examples straight out of the SKILL.md files**, so the docs can't
   drift from what's tested: the SSRF check against 15 private-address forms (IPv6-mapped, NAT64, short and decimal IPv4), `safeNextPath` against
   open-redirect tricks, billing wording for every status, and the owner-lock SQL on a real Postgres

@@ -40,10 +40,9 @@ with owners as (
 )
 delete from memberships m
 where m.id = $2 and m.organization_id = $1
-  and (m.role <> 'owner' or (
-    exists (select 1 from owners where id <> m.id)          -- another owner remains
-    and exists (select 1 from owners where user_id = $3)    -- the actor is still an owner
-  ))
+  and exists (select 1 from owners where user_id = $3)      -- the actor is (still) an owner
+  and (m.role <> 'owner'
+    or exists (select 1 from owners where id <> m.id))      -- another owner remains
 returning m.id;  -- no row back = refused
 ```
 

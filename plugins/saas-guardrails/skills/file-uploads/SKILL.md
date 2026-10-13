@@ -40,10 +40,14 @@ back, and the server attaches it, replaces it or deletes the old one.
      sql`not exists (select 1 from settings where logo_file_id = ${files.id})`,
    );
 
+   // Check and delete in ONE statement: a select, then a delete, lets a file attached in between
+   // be deleted anyway. Foreign keys to files.id (on delete restrict) cover an attach that is
+   // still committing.
    export async function deleteUnusedFiles(ids: string[]) {
-     const unused = await db.select({ id: files.id }).from(files)
-       .where(and(inArray(files.id, ids), fileNotInUse()));
-     await deleteFiles(unused.map((f) => f.id));
+     const deleted = await db.delete(files)
+       .where(and(inArray(files.id, ids), fileNotInUse()))
+       .returning({ storageKey: files.storageKey });
+     await removeFromStorage(deleted.map((f) => f.storageKey));
    }
    ```
 
@@ -54,8 +58,10 @@ back, and the server attaches it, replaces it or deletes the old one.
    `Cache-Control: private`, never from a public bucket URL.
 6. **Clean up orphans** (uploaded, form abandoned) with a scheduled job using the same
    `fileNotInUse()` check and an age limit (older than a day).
-7. **Delete the bytes, then the row**, or keep the row until storage confirms; and if saving the
-   row fails after storing the bytes, remove the bytes.
+7. **Delete the row, then the bytes**: the guarded delete above decides, storage follows. If
+   removing the bytes fails, log the key and retry: a stray object only costs storage, while a row
+   pointing at missing bytes breaks pages. And if saving the row fails after storing the bytes,
+   remove the bytes.
 
 ## Checklist
 

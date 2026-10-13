@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { importBlock } from "./snippets.ts";
 
-const { periodNote, hasPaymentProblem } = await importBlock(
+const { periodNote, hasPaymentProblem, isPaid } = await importBlock(
   "billing-states",
   "export function periodNote",
 );
@@ -20,6 +20,9 @@ test("every status says what happens next", () => {
     unpaid: [null, null],
     incomplete: [null, null],
     paused: [null, null],
+    canceled: [null, null],
+    incomplete_expired: [null, null],
+    some_new_status: [null, null],
   };
   for (const [status, [open, cancelled]] of Object.entries(expected)) {
     assert.equal(periodNote({ status, cancelAtPeriodEnd: false, currentPeriodEnd }), open, status);
@@ -39,6 +42,13 @@ test("a cancelled trial never says the trial simply ends", () => {
 test("dates are in UTC, whatever the server's time zone", () => {
   // 23:30 UTC on Oct 14 is already Oct 15 in Asia; the note must still say Oct 14.
   assert.match(periodNote({ status: "active", cancelAtPeriodEnd: false, currentPeriodEnd }), /Oct 14/);
+});
+
+test("only active and trialing count as paid", () => {
+  for (const status of ["active", "trialing"]) assert.equal(isPaid(status), true, status);
+  for (const status of ["past_due", "unpaid", "incomplete", "paused", "canceled", "incomplete_expired", null]) {
+    assert.equal(isPaid(status), false, String(status));
+  }
 });
 
 test("payment problems are detected", () => {

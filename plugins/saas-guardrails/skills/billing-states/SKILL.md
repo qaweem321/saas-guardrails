@@ -38,21 +38,30 @@ unit-test it for **every** row of the table, with and without `cancelAtPeriodEnd
   Never `Free trial ends on ...` after a cancel: it reads as if the cancel didn't work.
 - Payment problem: **no renewal date at all**. `Renews on ...` next to `Your last payment failed`
   contradicts itself.
+- Ended (`canceled`, `incomplete_expired`) or no subscription: no date either. They're on Free;
+  `Renews on ...` for a dead subscription is the worst sentence of all.
 
 A reference version (adapt the plan names):
 
 ```ts
+const PAID = ["active", "trialing"];
 const PAYMENT_PROBLEMS = ["past_due", "unpaid", "incomplete", "paused"];
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+export function isPaid(status: string | null | undefined) {
+  return Boolean(status && PAID.includes(status));
+}
 
 export function hasPaymentProblem(status: string | null | undefined) {
   return Boolean(status && PAYMENT_PROBLEMS.includes(status));
 }
 
 export function periodNote(s: { status: string; cancelAtPeriodEnd: boolean; currentPeriodEnd: Date | null }) {
-  if (!s.currentPeriodEnd || hasPaymentProblem(s.status)) return null;
+  // Only a live paid plan has a next date: payment problems would contradict their warning,
+  // and ended subscriptions are back on Free.
+  if (!s.currentPeriodEnd || !isPaid(s.status)) return null;
   const date = formatDate(s.currentPeriodEnd);
   if (s.cancelAtPeriodEnd) return `Cancelled: Pro ends on ${date}, then you're back on Free.`;
   return s.status === "trialing" ? `Free trial ends on ${date}.` : `Renews on ${date}.`;

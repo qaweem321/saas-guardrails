@@ -38,6 +38,23 @@ if (marketplace) {
   }
 }
 
+// The small part of YAML frontmatter skills use: `key: value` lines, where a value may continue on
+// indented lines, or start as a block scalar (`description: >`).
+function parseFrontmatter(text) {
+  const fields = {};
+  let key = null;
+  for (const line of text.split(/\r?\n/)) {
+    const field = line.match(/^([\w-]+):\s*(.*)$/);
+    if (field) {
+      key = field[1];
+      fields[key] = /^[>|][+-]?$/.test(field[2]) ? "" : field[2];
+    } else if (key && /^\s+\S/.test(line)) {
+      fields[key] = `${fields[key]} ${line.trim()}`.trim();
+    }
+  }
+  return fields;
+}
+
 function checkPlugin(dir, entryName, where) {
   if (!existsSync(dir)) return fail(`${where}: source path does not exist: ${dir}`);
   const manifest = readJson(join(dir, ".claude-plugin", "plugin.json"));
@@ -52,6 +69,7 @@ function checkPlugin(dir, entryName, where) {
   if (extra.length > 0) fail(`${where}: only plugin.json belongs in .claude-plugin/ (${extra})`);
 
   const skillsDir = join(dir, "skills");
+  if (!existsSync(skillsDir)) return fail(`${where}: missing skills/ folder`);
   for (const skill of readdirSync(skillsDir)) {
     const file = join(skillsDir, skill, "SKILL.md");
     if (!existsSync(file)) {
@@ -59,17 +77,12 @@ function checkPlugin(dir, entryName, where) {
       continue;
     }
     const text = readFileSync(file, "utf8");
-    const front = text.match(/^---\n([\s\S]*?)\n---\n/);
+    const front = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
     if (!front) {
       fail(`skills/${skill}/SKILL.md: missing frontmatter`);
       continue;
     }
-    const fields = Object.fromEntries(
-      front[1].split("\n").map((line) => {
-        const at = line.indexOf(":");
-        return [line.slice(0, at).trim(), line.slice(at + 1).trim()];
-      }),
-    );
+    const fields = parseFrontmatter(front[1]);
     if (fields.name !== skill) fail(`skills/${skill}: frontmatter name must be "${skill}"`);
     if (fields.name && (fields.name.length > 64 || !NAME.test(fields.name))) {
       fail(`skills/${skill}: name must be kebab-case, 64 characters at most`);

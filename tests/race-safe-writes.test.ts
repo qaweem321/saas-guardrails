@@ -47,6 +47,13 @@ test("someone who is no longer an owner can't remove an owner", async () => {
   assert.equal(await remove("mA", "B"), false);
 });
 
+test("only an owner can remove anyone, members included", async () => {
+  assert.equal(await remove("mB", "C"), false); // a plain member
+  assert.equal(await remove("mC", "X"), false); // an owner of another organization
+  assert.equal(await remove("mC", "nobody"), false);
+  assert.equal(await remove("mC", "B"), true);
+});
+
 test("members can be removed; other organizations are untouched", async () => {
   assert.equal(await remove("mC", "A"), true);
   assert.equal(await remove("mX", "A"), false);

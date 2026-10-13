@@ -55,17 +55,27 @@ const safeLookup = (host, options, cb) =>
     options.all ? cb(null, addresses) : cb(null, addresses[0].address, addresses[0].family);
   });
 
-request(url, { method: "POST", lookup: safeLookup, timeout: 5000 }, onResponse);
+request(url, {
+  method: "POST",
+  lookup: safeLookup,
+  agent: false,                       // a pooled keep-alive connection would skip the lookup
+  signal: AbortSignal.timeout(5000),  // whole request; `timeout` only fires when the socket goes idle
+}, onResponse);
 ```
 
 A literal IP in the URL skips DNS, so also reject `isIP(host) && isPrivateAddress(host)` before
 sending.
 
+Rather not maintain this yourself? [`@qaweem321/no-ssrf`](https://github.com/qaweem321/no-ssrf)
+does all of it (and the redirect and header rules below) and is tested against every bypass here.
+
 ## Also
 
 - `https:` only in production; reject `user:password@` in URLs.
-- **Don't follow redirects** (a public URL can redirect to a private one), or re-check every hop.
-- Short timeouts; read and discard the body; don't show the response body to the user.
+- **Don't follow redirects** (a public URL can redirect to a private one), or re-check every hop
+  and drop `Authorization` and `Cookie` when a redirect leaves the original origin.
+- A short deadline for the whole request, not only an idle timeout: a server can send one byte at
+  a time forever. Read and discard the body; don't show the response body to the user.
 - `fetch()` (undici) ignores a custom `lookup`: use `node:https` with `lookup`, or an undici
   `Agent` with a `connect.lookup`, for anything a user typed.
 - Rate-limit "send test" buttons per user and workspace.
@@ -85,5 +95,6 @@ for (const raw of ["https://[::ffff:127.0.0.1]/", "https://[::ffff:169.254.169.2
 
 - [ ] Hostname checked after `new URL()`, with `BlockList` (or an equivalent CIDR library).
 - [ ] Resolved addresses checked inside the connection's lookup.
-- [ ] No redirects followed; timeouts set; response bodies not echoed.
+- [ ] No pooled connections (`agent: false`); no redirects followed; a whole-request deadline;
+  response bodies not echoed.
 - [ ] Tests include IPv6-mapped, decimal and short-form IPv4.

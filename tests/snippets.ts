@@ -1,5 +1,5 @@
 // Loads code examples straight from the SKILL.md files, so the tests check what the docs say.
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -20,10 +20,12 @@ export function codeBlock(skill: string, marker: string) {
   return found[2];
 }
 
+// One folder per test run (runs can't collide), removed when the run ends.
+const dir = mkdtempSync(join(tmpdir(), "saas-guardrails-tests-"));
+process.on("exit", () => rmSync(dir, { recursive: true, force: true }));
+
 // Imports a TypeScript block as a module (Node strips the types).
 export async function importBlock(skill: string, marker: string) {
-  const dir = join(tmpdir(), "saas-guardrails-tests");
-  mkdirSync(dir, { recursive: true });
   const file = join(dir, `${skill}-${Math.abs(hash(marker))}.ts`);
   writeFileSync(file, codeBlock(skill, marker));
   return import(pathToFileURL(file).href);

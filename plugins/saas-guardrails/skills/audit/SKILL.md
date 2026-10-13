@@ -46,8 +46,9 @@ products ship. Read the related skills in this plugin for the details of each ar
 
 ### Medium: wording and state
 - Billing text for every status (`trialing`, `active`, cancelled at period end, `past_due`,
-  `unpaid`, `incomplete`, `paused`): does any message contradict the real state? "Renews on" next
-  to "payment failed"; "Free trial ends" after a cancel. Are these messages unit-tested?
+  `unpaid`, `incomplete`, `paused`, `canceled`, `incomplete_expired`): does any message contradict
+  the real state? "Renews on" next to "payment failed" or for an ended subscription; "Free trial
+  ends" after a cancel. Are these messages unit-tested?
 - Payment problems offering "Upgrade" instead of "Manage subscription".
 - Repeatable free trials.
 - Ambiguous dates (`10/11/2026`) or dates formatted in different time zones on server and client.
