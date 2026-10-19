@@ -88,7 +88,7 @@ the damage evidence, gets deleted.
 - The sample app's bugs are tested too, so the demo stays honest.
 
 ```bash
-npm install
+npm ci
 npm run check
 ```
 
